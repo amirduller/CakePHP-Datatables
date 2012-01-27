@@ -54,24 +54,31 @@ class DataTablesHelper extends AppHelper {
 		if ($options['bServerSide']){$options['bServerSide'] = 'true';}else{$options['bServerSide'] = 'false';}
 		if ($options['bJQueryUI']){$options['bJQueryUI'] = 'true';}else{$options['bJQueryUI'] = 'false';}
 
-		$this->out .= '<script type="text/javascript" charset="utf-8">';
-		$this->out .= '	$(document).ready(function() {';
-        	$this->out .= '		$("#datatable").dataTable( {';
-		$this->out .= '			"sScrollY": "'. $options['sScrollY'] .'",';
-	       $this->out .= '			"bScrollInfinite": '. $options['bScrollInfinite'] .',';
-	       $this->out .= '			"bProcessing": '. $options['bProcessing'] .',';
-	       $this->out .= '			"bLengthChange": '. $options['bLengthChange'] .',';
-	       $this->out .= '			"bScrollCollapse": '. $options['bScrollCollapse'] .',';
-	       $this->out .= '			"iDisplayLength": '. $options['iDisplayLength'] .',';
-	       $this->out .= '			"bServerSide": '. $options['bServerSide'] .',';
-	       $this->out .= '			"bJQueryUI": '. $options['bJQueryUI'] .',';
-	       $this->out .= '			"aaSorting": [[0,"asc"]],';
-	       $this->out .= '			"aoColumns": [';
+			$this->out .= '<script type="text/javascript" charset="utf-8">';
+			$this->out .= '	$(function() {';
+			$this->out .= '		$("#datatable").dataTable( {';
+			//$this->out .= '			"sScrollY": "'. $options['sScrollY'] .'",';
+			
+			$this->out .= '			"sPaginationType": "full_numbers",';
+			$this->out .= '			"bAutoWidth": true,';
+			
+			//$this->out .= '			"bScrollInfinite": '. $options['bScrollInfinite'] .',';
+			$this->out .= '			"bProcessing": true,';
+			//$this->out .= '			"bLengthChange": '. $options['bLengthChange'] .',';
+			//$this->out .= '			"bScrollCollapse": '. $options['bScrollCollapse'] .',';
+			$this->out .= '			"iDisplayLength": '. $options['iDisplayLength'] .',';
+			$this->out .= '			"bServerSide": '. $options['bServerSide'] .',';
+			$this->out .= '			"bJQueryUI": '. $options['bJQueryUI'] .',';
+			$this->out .= '			"aaSorting": [[0,"asc"]],';
+			$this->out .= '			"aoColumns": [';
+			
 		foreach ($data['aColumns'] as $key => $value){
 			if (is_numeric($key)){
-				$this->out .= '{ "sName": "'.$value.'" },';
+				$this->out .= '{ "sTitle": "'.$value.'" },';
 			}else{
-				$this->out .= '{ "sName" : "' . $key . '", ';
+				
+				$this->out .= '{ "sTitle" : "' . $value['sTitle'] . '", ';
+				$this->out .= ' "sName" : "' . $value['sName'] . '", ';
 				if (isset($value['sortable'])){
 					if ($value['sortable']){
 						$this->out .= '"bSortable": true, ';
@@ -88,7 +95,8 @@ class DataTablesHelper extends AppHelper {
 				}
 				$this->out = substr($this->out,0,-2) . ' },';
 			}
-		}			
+		}
+		
 		$this->out .= '			],';
 		$this->out .= '			"sAjaxSource": "' . $this->Html->url($data['sAjaxSource']) . '"';
 		$this->out .= '		} );';
