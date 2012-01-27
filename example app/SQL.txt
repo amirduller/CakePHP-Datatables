@@ -14,7 +14,12 @@ CREATE TABLE `parts` (
   `name` varchar(200) DEFAULT NULL,
   `description` mediumtext,
   `price` int(11) DEFAULT NULL,
-  `public` tinyint(1) DEFAULT '1',
+  `tag_id` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+
+INSERT INTO `tags` (`id`, `name`) VALUES
+(1, 'Yes'),
+(0, 'No');
