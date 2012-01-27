@@ -90,5 +90,24 @@ Then to output the datatables javascript you use the javaScript method from the 
 This method requires jQuery and dataTables js to be included in the webpage, I use this throughout my admin panels so its included in the header of all of them.
 
 
-To do:
+To do: 
 There are a lot of things I would like to add to this, such as automagic handling of belongsTo, hasMany, relationships where you will want to display for example users and the group they belong to. It is possible as I have nastily hacked it into one project already but the code isn't nice enough to publish here.
+
+//// UPDATES ////
+
+- can now handle database relationship
+- added paginator
+- order features
+
+NOTE: 
+	Sorry it was my first time here and I don't how to upload files so please create an application model file 'tag.php'.
+	I really want to explain here all the files that I have been changed but Im not good in english.
+	- many thanks to Simon Dann
+
+	<?php
+	class Tag extends AppModel {
+		var $name = 'Tag';
+	
+	}
+
+
