@@ -20,7 +20,9 @@ class DataTablesComponent extends Object {
 
 	var $sLimit = null;
 	var $sNames = null;
+	var $sFields = null;
 	var $model = null;
+	var $conditions = null;
 
    /**
 	* initialize function.
@@ -36,79 +38,90 @@ class DataTablesComponent extends Object {
 		}
 	}
 	
-	
-   /**
-	* output function.
-	* echos out a json encoded array for the dataTables jQuery font end to pick up
-	* yes once again lazyness has resulted in this being a simple echo and kill rather than
-	* being passed on to a view, which should probably be returned via a url with a .json at the end.
-	* @since     CakePHP-Datatables v 1.0.0
-	*/
 	function output ($dataTables = null){
-		if ($dataTables){			
 			
-			// A way of getting the names of all the columns.
-			if ( isset( $this->controller->params['url']['sNames'] ) ){
-				$this->sNames = explode(',', $this->controller->params['url']['sNames'] );
+			$this->conditions = (isset($dataTables['conditions']))?$dataTables['conditions']:null;
+	
+		// A way of getting the names of all the columns.
+			if ( isset( $this->controller->params['url']['sColumns'] ) ){
+				$this->sNames = explode(',', $this->controller->params['url']['sColumns'] );
+				$key = array_search('buttons', $this->sNames);
+				if($key){
+					unset($this->sNames[$key]);
+				}
+				
+				// get table fields
+				foreach ($dataTables['aColumns'] as $key=>$col){
+					if($key!='buttons')
+						$this->sFields[] = $col['sField'];
+				}
+				
 			}
 			
 			// Are we sorting columns
 			if ( isset( $this->controller->params['url']['iSortCol_0'] ) ){
 				for ( $i=0 ; $i<intval( $this->controller->params['url']['iSortingCols'] ) ; $i++ ){
 					if ( $this->controller->params['url'][ 'bSortable_'.intval( $this->controller->params['url']['iSortCol_'.$i] ) ] == "true" ){
-						if (isset ($this->sNames)){
-							$ordering[] = $dataTables['use'] . '.' . $this->sNames[ intval( $this->controller->params['url']['iSortCol_'.$i] ) ] . ' ' . $this->controller->params['url']['sSortDir_'.$i];
+						if (isset ($this->sFields)){
+							//$ordering[] = $dataTables['use'] . '.' . $this->sNames[ intval( $this->controller->params['url']['iSortCol_'.$i] ) ] . ' ' . $this->controller->params['url']['sSortDir_'.$i];
+							$ordering[] =  $this->sFields[ intval( $this->controller->params['url']['iSortCol_'.$i] ) ] . ' ' . $this->controller->params['url']['sSortDir_'.$i];
 						}
 					}
 				}
 			}
 			
 			// If the user is searching
-			if ( $this->controller->params['url']['sSearch'] != "" ){
-				for ( $i=0 ; $i<count($this->sNames) ; $i++ ){
-					if ( $this->controller->params['url']['bSearchable_'.$i] == "true"){
-						$conditions[$dataTables['use'] . '.' . $this->sNames[$i] . ' LIKE'] = '%' . $this->controller->params['url']['sSearch'] . '%';
+			if(isset($this->controller->params['url']['sSearch'])){
+				if ( $this->controller->params['url']['sSearch'] != "" ){
+					for ( $i=0 ; $i<count($this->sFields) ; $i++ ){
+						if ( $this->controller->params['url']['bSearchable_'.$i] == "true"){
+							$search_conditions[$this->sFields[$i] . ' LIKE']  = '%' . $this->controller->params['url']['sSearch'] . '%';
+						}
 					}
 				}
 			}
-			
-			if (isset($conditions) && !empty($conditions)){
-				$finalconditions = array('OR'=>$conditions);
-			}else{
-				$finalconditions = '';
+			if (isset($search_conditions) && !empty($search_conditions)){
+				$this->conditions['and'] = array('or'=>$search_conditions);
 			}
 			
 			$n = array(
-				'conditions' => $finalconditions,
+				'conditions' => $this->conditions,
 				'recursive' => 1,
-				'fields' => $this->sNames,
-				'order' => $ordering,
-				'limit' => $this->controller->params['url']['iDisplayLength'], 
-				'offset'=> $this->controller->params['url']['iDisplayStart'], 
+				'fields' => $this->sFields,
+				'order' => (isset($ordering))?$ordering:'',
+				'limit' => (isset($this->controller->params['url']['iDisplayLength']))?$this->controller->params['url']['iDisplayLength']:20, 
+				'offset'=> (isset($this->controller->params['url']['iDisplayStart']))?$this->controller->params['url']['iDisplayStart']:0, 
 			);
+			
 			
 			$rResult = $this->$dataTables['use']->find('all', $n);
 			$iTotal = $this->$dataTables['use']->find('count');
-			if ($this->controller->params['url']['sSearch']){
+			
+			if (isset($this->controller->params['url']['sSearch'])){
 				$n['limit'] = null;
 				$n['offset'] = null;
-				$iFilteredTotal = $this->$dataTables['use']->find('count', array('conditions' => $finalconditions));
+				$iFilteredTotal = $this->$dataTables['use']->find('count', array('conditions' => $this->conditions));
 			}else{
 				$iFilteredTotal = $iTotal;
 			}
 			
 			$output = array(
 				"aoColumns" => implode(',', $this->sNames),
-				"sEcho" => intval($this->controller->params['url']['sEcho']),
+				"sEcho" => (isset($this->controller->params['url']['sEcho']))?intval($this->controller->params['url']['sEcho']):'',
 				"iTotalRecords" => $iTotal,
 				"iTotalDisplayRecords" => $iFilteredTotal,
 				"aaData" => array()
 			);
+			
 			foreach ($rResult as $record){
 				$row = array();
-				for ( $i=0 ; $i<count($this->sNames) ; $i++ ){
-					$row[] = $this->filter($this->sNames[$i], $record, $dataTables['use']);
+				$ts = '';
+				for ( $i=0 ; $i<count($this->sFields) ; $i++ ){
+					//$row[] = $this->filter($this->sNames[$i], $record, $dataTables['use']);
+					$fData = explode('.',$this->sFields[$i]);
+					$row[] = $record[$fData[0]][$fData[1]];
 				}
+				
 				/* Add buttons as an additional column?
 				 * maybe in the form of:
 				 * $dataTables['buttons'] = array(
@@ -119,36 +132,11 @@ class DataTablesComponent extends Object {
 				 */
 				$output['aaData'][] = $row;
 			}
+			
 			echo json_encode( $output );
 			die();
-		}else{
-			return false;
-		}
+			
 	}
-		
-   /**
-	* filter function.
-	* Use this function to filter the output as provided by the find request, if you are using joins such as belongsTo,
-	* or virtual fields with weird __ in their names you can filter them here and fix the output
-	* the example below replaces public which is a boole from having a 0/1 output to having a no/yes output
-	* @since     CakePHP-Datatables v 1.0.0
-	*/
-	function filter($input, $record, $tName){
-
-        switch ($input){
-
-            case 'public':
-                $output = 'No';
-                if ($record[$tName]['public'] == '1'){
-                    $output = 'Yes';
-                }
-                return $output;
-                break;
-            default:
-                return $record[$tName][$input];
-                break;
-        }
-    }
 
 }
 
