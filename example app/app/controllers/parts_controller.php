@@ -13,28 +13,57 @@ class PartsController extends AppController {
 			'aColumns' => array(
 				'id' => array(
 					'sName' => 'id',
+					'sField' => 'Part.id',
+					'sTitle' => 'Id',
 					'sortable' => true,
 					'searchable' => true,
 					'aaSorting' => 'desc',
 				),
 				'modified' => array(
 					'sName' => 'modified',
-					'searchable' => false,
+					'sField' => 'Part.modified',
+					'sTitle' => 'MODIFIED',
+					'searchable' => true,
+					'sortable' => true,
 				),
-				'name',
-				'part_number',
-				'price',
-				'public' => array(
-					'sName' => 'public',
-					'searchable' => false,
+				'name'	=> array(
+					'sName' => 'name',
+					'sField' => 'Part.name',
+					'sTitle' => 'NAME',
+					'sortable' => true,
+					'searchable' => true,
+				),
+				'part_number'	=> array(
+					'sName' => 'part_number',
+					'sField' => 'Part.part_number',
+					'sTitle' => 'PART NUMBER',
+					'sortable' => true,
+					'searchable' => true,
+				),
+				'price'	=> array(
+					'sName' => 'price',
+					'sField' => 'Part.price',
+					'sTitle' => 'PRICE',
+					'sortable' => true,
+					'searchable' => true,
+				),
+				'tag' => array(
+					'sName' => 'tag',
+					'sField' => 'Tag.name',
+					'sTitle' => 'PUBLIC',
+					'sortable' => true,
+					'searchable' => true,
 				)
 			),
+			'bServerSide' => true,
+			'bProcessing' => true,
 			'use' => 'Part', // Could this be the same as sTable? if so remove it and fix the component
 			'sAjaxSource' => array(
 				'action' => 'index'
-			)
+			),
+			//'conditions' => array('Part.tag_id'=>1)
 		);
-
+		
 		if ($this->RequestHandler->isAjax()) {
 			$this->DataTables->output($dataTables);
 		}else{
